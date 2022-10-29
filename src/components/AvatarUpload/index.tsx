@@ -1,4 +1,4 @@
-import React, {DragEvent, useRef, useState} from 'react';
+import React, {DragEvent, useEffect, useRef, useState} from 'react';
 import styled, {css} from 'styled-components';
 
 import LogoInteractInfo from './LogoInteractInfo';
@@ -6,6 +6,7 @@ import SelectedImageComponent from './CropAndSave';
 import SavedImage from './SavedImage';
 import UploadFailed from './UploadFailed';
 import {SimpleSnackbar} from "../Snackbar";
+import {imageDetectionHttpRequest} from "../../httpServices/imageDetectionHttpRequest";
 
 interface WrapperProps {
     isErrored: boolean;
@@ -56,6 +57,35 @@ const Home = () => {
     const [isErrored, setError] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [zoomLevel, setZoomlevel] = useState(1);
+    const [imageClassification, setImageClassification] = useState<string | any>(null);
+
+    useEffect(() => {
+        if (imageFile) {
+            imageDetectionHttpRequest(imageFile).then((response) => {
+                setImageClassification(response);
+            });
+        }
+    }, [imageFile]);
+
+
+    const catAdvertising = () => {
+        setTimeout(() => {
+            setImageClassification(null);
+        }, 10000);
+        if (imageClassification?.class === 'a dog') {
+            return (
+                <SimpleSnackbar isSaved={!!imageClassification} classe={imageClassification?.class ?? null}
+                                message={"Anúncio de cachorro"}/>
+            );
+        }
+        if (imageClassification?.class === 'a cat') {
+            return (
+                <SimpleSnackbar isSaved={!!imageClassification} classe={imageClassification?.class ?? null}
+                                message={"Anúncio de gato"}/>
+            );
+        }
+
+    };
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -161,7 +191,8 @@ const Home = () => {
             >
                 {renderChild()}
             </Wrapper>
-            <SimpleSnackbar isSaved={isSaved}/>
+            <SimpleSnackbar isSaved={isSaved} message={"Imagem enviada com sucesso !!!"}/>
+            {catAdvertising()}
         </>
 
     );
